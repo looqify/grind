@@ -32,8 +32,8 @@ const login = (email, password) =>
     console.log('GET TOKEN\n');
     const user = readline.question('email : ');
     const pass = readline.question('pass : ');
-    const login = await login(user, pass);
-    console.log(login);
+    const res = await login(user, pass);
+    console.log(res);
   } catch (error) {
     console.log(error.message);
   }
