@@ -27,7 +27,7 @@ const login = (email, password) =>
       .then((e) => reject(e));
   });
 
-async () => {
+(async () => {
   try {
     console.log('GET TOKEN\n');
     const user = readline.question('email : ');
@@ -37,4 +37,4 @@ async () => {
   } catch (error) {
     console.log(error.message);
   }
-};
+})();
