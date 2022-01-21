@@ -3,9 +3,35 @@ const fs = require('fs');
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const readline = require('readline-sync');
 const _ = require('lodash');
-let channelId, guildId;
+// var channelId, guildId;
 
-const sendMessage = (message, token) =>
+const getInvite = (token, channelId) =>
+  new Promise((resolve, reject) => {
+    fetch(`https://discord.com/api/v9/channels/${channelId}/invites`, {
+      headers: {
+        accept: '*/*',
+        'accept-language': 'en-US,en;q=0.9',
+        authorization: token,
+        'content-type': 'application/json',
+        'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="97", "Chromium";v="97"',
+        'sec-ch-ua-mobile': '?1',
+        'sec-ch-ua-platform': '"Android"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'x-debug-options': 'bugReporterEnabled',
+        'x-discord-locale': 'en-US',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+      },
+      body: JSON.stringify({ validate: null, max_age: 604800, max_uses: 0, target_type: null, temporary: false }),
+      method: 'POST',
+    })
+      .then((r) => r.json())
+      .then((res) => resolve(res))
+      .then((e) => reject(e));
+  });
+
+const sendMessage = (message, token, channelId) =>
   new Promise((resolve, reject) => {
     fetch(`https://discord.com/api/v9/channels/${channelId}/messages`, {
       headers: {
@@ -60,7 +86,7 @@ const scrapeMessage = (token, channelId, before = null) =>
       .then((e) => reject(e));
   });
 
-const replyMessage = (messageId, message, token) =>
+const replyMessage = (messageId, message, token, channelId, guildId) =>
   new Promise((resolve, reject) => {
     fetch(`https://discord.com/api/v9/channels/${channelId}/messages`, {
       headers: {
@@ -87,7 +113,7 @@ const replyMessage = (messageId, message, token) =>
       .then((e) => reject(e));
   });
 
-const typing = (token) =>
+const typing = (token, channelId) =>
   new Promise((resolve, reject) => {
     fetch(`https://discord.com/api/v9/channels/${channelId}/typing`, {
       headers: {
@@ -112,82 +138,4 @@ const typing = (token) =>
       .then((e) => reject(e));
   });
 
-(async () => {
-  const ch = readline.question('Channel link : ').replace('https://discord.com/channels/', '').split('/');
-  const mode = ['Single player', 'Duo', 'Continuous'];
-  const type = readline.keyInSelect(mode, 'Which mode? : ');
-  console.log('Ok, ' + mode[type] + ' goes to your room.');
-  guildId = ch[0];
-  channelId = ch[1];
-
-  let tokens = fs
-    .readFileSync('./tokens.txt', 'utf-8')
-    .split('\n')
-    .filter((a) => a);
-  let tokensLength = tokens.length;
-  let chats = fs.readFileSync('./chats.txt', 'utf-8').split('\r\n====##====\r\n');
-  let i = 0,
-    msgId;
-  for (let [r, a] of chats.entries()) {
-    try {
-      if (tokensLength < 1) {
-        console.log('Token not found!');
-        break;
-      }
-      let idx = r + 1;
-      await typing(tokens[i]);
-      await delay(2121);
-      await typing(tokens[i]);
-
-      if (type == '0') {
-        let msg = await sendMessage(a, tokens[i]);
-        if (msg.id) {
-          console.log(`${msg.author.username} : ${msg.content}`);
-        } else {
-          console.log(`${msg.message}, retry after ${msg.retry_after}s`);
-          await delay(msg.retry_after * 1000);
-          msg = await sendMessage(a, tokens[i]);
-          console.log(`${msg.author.username} : ${msg.content}`);
-        }
-      }
-
-      // continous chat
-      else if (type == '2') {
-        let msg = r < 1 ? await sendMessage(a, tokens[i]) : await replyMessage(msgId, a, tokens[i]); // opening chat?
-        if (msg.id) {
-          console.log(`${msg.author.username} : ${msg.content}`);
-        } else {
-          console.log(`${msg.message}, retry after ${msg.retry_after}s`);
-          await delay(msg.retry_after * 1000);
-          msg = r < 1 ? await sendMessage(a, tokens[i]) : await replyMessage(msgId, a, tokens[i]);
-          console.log(`${msg.author.username} : ${msg.content}`);
-        }
-      } else if (type == '1') {
-        // by 1
-        let msg = r < 1 || idx % 2 !== 0 ? await sendMessage(a, tokens[i]) : await replyMessage(msgId, a, tokens[i]); // opening chat?
-        if (msg.id) {
-          console.log(`${msg.author.username} : ${msg.content}`);
-        } else {
-          console.log(`${msg.message}, retry after ${msg.retry_after}s`);
-          await delay(msg.retry_after * 1000);
-          msg = r < 1 || idx % 2 !== 0 ? await sendMessage(a, tokens[i]) : await replyMessage(msgId, a, tokens[i]);
-          console.log(`${msg.author.username} : ${msg.content}`);
-        }
-      } else {
-        console.log('Canceled...');
-        break;
-      }
-
-      msgId = msg.id;
-    } catch (error) {
-      console.log(error.message);
-    }
-
-    if (i == tokensLength - 1) {
-      i = 0;
-    } else {
-      i++;
-    }
-    await delay(12188);
-  }
-})();
+module.exports = { getInvite, typing, sendMessage, replyMessage, scrapeMessage, delay, readline, _, fs };

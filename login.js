@@ -33,7 +33,7 @@ const login = (email, password) =>
     const user = readline.question('email : ');
     const pass = readline.question('pass : ');
     const res = await login(user, pass);
-    console.log(res);
+    console.log(JSON.stringify(res));
   } catch (error) {
     console.log(error.message);
   }
