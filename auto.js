@@ -2,6 +2,7 @@ let { typing, sendMessage, replyMessage, scrapeMessage, delay, readline, _, fs }
 const getNumberBetween = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
+
 (async () => {
   let tokens = readline
     .question('Tokens => Token1|Token2 : ')
@@ -9,6 +10,7 @@ const getNumberBetween = (min, max) => {
     .filter((a) => a);
   let tokensLength = tokens.length;
   const ch = readline.question('Channel link : ').replace('https://discord.com/channels/', '').split('/');
+  const delayTime = readline.questionInt('Delay [second] : ') * 1000;
   let = guildId = ch[0];
   let = channelId = ch[1];
   let msg,
@@ -18,7 +20,7 @@ const getNumberBetween = (min, max) => {
     const msgs = await scrapeMessage(tokens[0], channelId, null);
     console.log(msgs.length);
     // filter => list
-    for (let message of msgs) {
+    for (let message of msgs.reverse()) {
       if (message.referenced_message) {
         let chat1 = message.referenced_message.content;
         let chat2 = message.content;
@@ -37,7 +39,7 @@ const getNumberBetween = (min, max) => {
             msg = await sendMessage(chat1, tokens[0], channelId);
             console.log(`${msg.author.username} : ${msg.content}`);
           }
-          await delay(getNumberBetween(30000, 50000));
+          await delay(getNumberBetween(delayTime, delayTime + (delayTime * 30) / 100));
           await typing(tokens[1], channelId);
           await delay(2121);
           await typing(tokens[1], channelId);
@@ -50,7 +52,7 @@ const getNumberBetween = (min, max) => {
             msg = await replyMessage(msg.id, chat2, tokens[1], channelId, guildId);
             console.log(`${msg.author.username} : ${msg.content}`);
           }
-          await delay(getNumberBetween(30000, 50000));
+          await delay(getNumberBetween(delayTime, delayTime + (delayTime * 30) / 100));
         }
       }
     }
